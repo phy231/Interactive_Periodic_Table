@@ -16,7 +16,7 @@ An elegant, fully interactive Periodic Table of Elements built with modern web t
 
 ## 🚀 Demo
 
-[Live Demo](https://your-deployment-url.com)
+[Live Demo](https://interactive-periodic-table-dusky.vercel.app/)
 
 ---
 

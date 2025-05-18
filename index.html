@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Interactive (Period)ic Table</title>
+    <style>
+      body {
+        margin: 0;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+
+      h1 {
+        margin-bottom: 20px;
+        font-weight: 700;
+        letter-spacing: 2px;
+      }
+
+      .table {
+        display: grid;
+        grid-template-columns: repeat(18, 70px);
+        grid-template-rows: repeat(9, 90px);
+        gap: 5px;
+        justify-content: center;
+      }
+
+      .element {
+        position: relative;
+        background: #333;
+        border-radius: 10px;
+        padding: 8px 5px;
+        box-sizing: border-box;
+        cursor: default;
+        user-select: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: inset 0 0 8px #0008;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .element:hover {
+        transform: scale(1.15);
+        box-shadow: 0 0 15px #0ff, inset 0 0 10px #000a;
+        z-index: 10;
+      }
+
+      /* Categories */
+      .metal {
+        background: linear-gradient(145deg, #a14a00, #cf6a00);
+        color: #fff9e6;
+      }
+
+      .metalloid {
+        background: linear-gradient(145deg, #62727b, #90a4ae);
+        color: #eef3f5;
+      }
+
+      .nonmetal {
+        background: linear-gradient(145deg, #155799, #159957);
+        color: #e0f7f9;
+      }
+
+      .element .number {
+        font-size: 12px;
+        opacity: 0.7;
+        text-align: left;
+      }
+
+      .element .symbol {
+        font-size: 28px;
+        font-weight: 700;
+        text-align: center;
+        line-height: 1;
+        user-select: text;
+      }
+
+      .element .mass {
+        font-size: 13px;
+        opacity: 0.75;
+        text-align: right;
+      }
+
+      /* Tooltip */
+      .tooltip {
+        position: absolute;
+        top: -110px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #111c29dd;
+        border-radius: 8px;
+        padding: 10px 14px;
+        width: 220px;
+        font-size: 13px;
+        color: #def;
+        box-shadow: 0 0 15px #00ffff88;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+        z-index: 20;
+        user-select: none;
+      }
+
+      .element:hover .tooltip {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* Layout fixes for lanthanides and actinides */
+      .lanth {
+        grid-row: 8;
+      }
+
+      .actin {
+        grid-row: 9;
+      }
+      h1 {
+        font-weight: 700;
+        font-size: 3rem;
+        background: linear-gradient(90deg, #ff7e5f, #feb47b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Periodic Table of Elements</h1>
+    <div class="table" id="periodic-table"></div>
+
+    <script>
+      const elements = [
+        // Format: {number, symbol, name, mass, category, period, group, property, use}
+        {
+          number: 1,
+          symbol: "H",
+          name: "Hydrogen",
+          mass: "1.008",
+          category: "nonmetal",
+          period: 1,
+          group: 1,
+          property: "Lightest element, highly flammable",
+          use: "Fuel and rocket propellant",
+        },
+        {
+          number: 2,
+          symbol: "He",
+          name: "Helium",
+          mass: "4.0026",
+          category: "nonmetal",
+          period: 1,
+          group: 18,
+          property: "Inert noble gas",
+          use: "Filling balloons and cooling MRI machines",
+        },
+
+        {
+          number: 3,
+          symbol: "Li",
+          name: "Lithium",
+          mass: "6.94",
+          category: "metal",
+          period: 2,
+          group: 1,
+          property: "Light metal, reacts with water",
+          use: "Rechargeable batteries",
+        },
+        {
+          number: 4,
+          symbol: "Be",
+          name: "Beryllium",
+          mass: "9.0122",
+          category: "metal",
+          period: 2,
+          group: 2,
+          property: "Light, stiff metal",
+          use: "Aerospace materials",
+        },
+        {
+          number: 5,
+          symbol: "B",
+          name: "Boron",
+          mass: "10.81",
+          category: "metalloid",
+          period: 2,
+          group: 13,
+          property: "Hard, black metalloid",
+          use: "Glass and detergents",
+        },
+        {
+          number: 6,
+          symbol: "C",
+          name: "Carbon",
+          mass: "12.011",
+          category: "nonmetal",
+          period: 2,
+          group: 14,
+          property: "Basis of organic life",
+          use: "Steel making and fuels",
+        },
+        {
+          number: 7,
+          symbol: "N",
+          name: "Nitrogen",
+          mass: "14.007",
+          category: "nonmetal",
+          period: 2,
+          group: 15,
+          property: "Makes up ~78% of air",
+          use: "Fertilizers and explosives",
+        },
+        {
+          number: 8,
+          symbol: "O",
+          name: "Oxygen",
+          mass: "15.999",
+          category: "nonmetal",
+          period: 2,
+          group: 16,
+          property: "Supports combustion",
+          use: "Breathing and welding",
+        },
+        {
+          number: 9,
+          symbol: "F",
+          name: "Fluorine",
+          mass: "18.998",
+          category: "nonmetal",
+          period: 2,
+          group: 17,
+          property: "Highly reactive halogen",
+          use: "Toothpaste and refrigerants",
+        },
+        {
+          number: 10,
+          symbol: "Ne",
+          name: "Neon",
+          mass: "20.180",
+          category: "nonmetal",
+          period: 2,
+          group: 18,
+          property: "Inert noble gas",
+          use: "Neon signs",
+        },
+
+        // Adding more elements, only a subset here for brevity
+        {
+          number: 11,
+          symbol: "Na",
+          name: "Sodium",
+          mass: "22.990",
+          category: "metal",
+          period: 3,
+          group: 1,
+          property: "Highly reactive alkali metal",
+          use: "Table salt and soap",
+        },
+        {
+          number: 12,
+          symbol: "Mg",
+          name: "Magnesium",
+          mass: "24.305",
+          category: "metal",
+          period: 3,
+          group: 2,
+          property: "Lightweight metal",
+          use: "Alloys and flares",
+        },
+        {
+          number: 13,
+          symbol: "Al",
+          name: "Aluminum",
+          mass: "26.982",
+          category: "metal",
+          period: 3,
+          group: 13,
+          property: "Corrosion resistant",
+          use: "Packaging and aircraft",
+        },
+        {
+          number: 14,
+          symbol: "Si",
+          name: "Silicon",
+          mass: "28.085",
+          category: "metalloid",
+          period: 3,
+          group: 14,
+          property: "Semiconductor material",
+          use: "Electronics and glass",
+        },
+        {
+          number: 15,
+          symbol: "P",
+          name: "Phosphorus",
+          mass: "30.974",
+          category: "nonmetal",
+          period: 3,
+          group: 15,
+          property: "Essential for life",
+          use: "Fertilizers",
+        },
+        {
+          number: 16,
+          symbol: "S",
+          name: "Sulfur",
+          mass: "32.06",
+          category: "nonmetal",
+          period: 3,
+          group: 16,
+          property: "Yellow nonmetal",
+          use: "Sulfuric acid production",
+        },
+        {
+          number: 17,
+          symbol: "Cl",
+          name: "Chlorine",
+          mass: "35.45",
+          category: "nonmetal",
+          period: 3,
+          group: 17,
+          property: "Disinfectant gas",
+          use: "Water purification",
+        },
+        {
+          number: 18,
+          symbol: "Ar",
+          name: "Argon",
+          mass: "39.948",
+          category: "nonmetal",
+          period: 3,
+          group: 18,
+          property: "Inert noble gas",
+          use: "Lighting and welding",
+        },
+        {
+          number: 19,
+          symbol: "K",
+          name: "Potassium",
+          mass: "39.098",
+          category: "metal",
+          period: 4,
+          group: 1,
+          property: "Soft, reactive alkali metal",
+          use: "Fertilizers",
+        },
+        {
+          number: 20,
+          symbol: "Ca",
+          name: "Calcium",
+          mass: "40.078",
+          category: "metal",
+          period: 4,
+          group: 2,
+          property: "Essential for bones",
+          use: "Cement and plaster",
+        },
+        {
+          number: 21,
+          symbol: "Sc",
+          name: "Scandium",
+          mass: "44.956",
+          category: "metal",
+          period: 4,
+          group: 3,
+          property: "Light transition metal",
+          use: "Aerospace components",
+        },
+        {
+          number: 22,
+          symbol: "Ti",
+          name: "Titanium",
+          mass: "47.867",
+          category: "metal",
+          period: 4,
+          group: 4,
+          property: "Strong and corrosion-resistant",
+          use: "Aircraft and implants",
+        },
+        {
+          number: 23,
+          symbol: "V",
+          name: "Vanadium",
+          mass: "50.942",
+          category: "metal",
+          period: 4,
+          group: 5,
+          property: "Hard, corrosion resistant",
+          use: "Steel alloys",
+        },
+        {
+          number: 24,
+          symbol: "Cr",
+          name: "Chromium",
+          mass: "51.996",
+          category: "metal",
+          period: 4,
+          group: 6,
+          property: "Shiny, corrosion resistant",
+          use: "Stainless steel",
+        },
+        {
+          number: 25,
+          symbol: "Mn",
+          name: "Manganese",
+          mass: "54.938",
+          category: "metal",
+          period: 4,
+          group: 7,
+          property: "Adds strength to steel",
+          use: "Batteries and steel",
+        },
+        {
+          number: 26,
+          symbol: "Fe",
+          name: "Iron",
+          mass: "55.845",
+          category: "metal",
+          period: 4,
+          group: 8,
+          property: "Magnetic metal",
+          use: "Construction and tools",
+        },
+        {
+          number: 27,
+          symbol: "Co",
+          name: "Cobalt",
+          mass: "58.933",
+          category: "metal",
+          period: 4,
+          group: 9,
+          property: "Magnetic, blue pigment",
+          use: "Alloys and batteries",
+        },
+        {
+          number: 28,
+          symbol: "Ni",
+          name: "Nickel",
+          mass: "58.693",
+          category: "metal",
+          period: 4,
+          group: 10,
+          property: "Corrosion resistant",
+          use: "Coins and alloys",
+        },
+        {
+          number: 29,
+          symbol: "Cu",
+          name: "Copper",
+          mass: "63.546",
+          category: "metal",
+          period: 4,
+          group: 11,
+          property: "Excellent conductor",
+          use: "Electrical wiring",
+        },
+        {
+          number: 30,
+          symbol: "Zn",
+          name: "Zinc",
+          mass: "65.38",
+          category: "metal",
+          period: 4,
+          group: 12,
+          property: "Prevents rusting",
+          use: "Galvanizing steel",
+        },
+        {
+          number: 31,
+          symbol: "Ga",
+          name: "Gallium",
+          mass: "69.723",
+          category: "metal",
+          period: 4,
+          group: 13,
+          property: "Melts near body temperature",
+          use: "Electronics",
+        },
+        {
+          number: 32,
+          symbol: "Ge",
+          name: "Germanium",
+          mass: "72.63",
+          category: "metalloid",
+          period: 4,
+          group: 14,
+          property: "Semiconductor",
+          use: "Fiber optics",
+        },
+        {
+          number: 33,
+          symbol: "As",
+          name: "Arsenic",
+          mass: "74.922",
+          category: "metalloid",
+          period: 4,
+          group: 15,
+          property: "Toxic metalloid",
+          use: "Pesticides",
+        },
+        {
+          number: 34,
+          symbol: "Se",
+          name: "Selenium",
+          mass: "78.971",
+          category: "nonmetal",
+          period: 4,
+          group: 16,
+          property: "Photoconductive",
+          use: "Glass and electronics",
+        },
+        {
+          number: 35,
+          symbol: "Br",
+          name: "Bromine",
+          mass: "79.904",
+          category: "nonmetal",
+          period: 4,
+          group: 17,
+          property: "Red-brown liquid halogen",
+          use: "Flame retardants",
+        },
+        {
+          number: 36,
+          symbol: "Kr",
+          name: "Krypton",
+          mass: "83.798",
+          category: "nonmetal",
+          period: 4,
+          group: 18,
+          property: "Inert noble gas",
+          use: "Lighting",
+        },
+
+        {
+          number: 37,
+          symbol: "Rb",
+          name: "Rubidium",
+          mass: "85.468",
+          category: "metal",
+          period: 5,
+          group: 1,
+          property: "Soft, reactive alkali metal",
+          use: "Research and electronics",
+        },
+        {
+          number: 38,
+          symbol: "Sr",
+          name: "Strontium",
+          mass: "87.62",
+          category: "metal",
+          period: 5,
+          group: 2,
+          property: "Produces red flame",
+          use: "Fireworks",
+        },
+        {
+          number: 39,
+          symbol: "Y",
+          name: "Yttrium",
+          mass: "88.906",
+          category: "metal",
+          period: 5,
+          group: 3,
+          property: "Used in LEDs",
+          use: "Phosphors in TVs",
+        },
+        {
+          number: 40,
+          symbol: "Zr",
+          name: "Zirconium",
+          mass: "91.224",
+          category: "metal",
+          period: 5,
+          group: 4,
+          property: "Corrosion resistant",
+          use: "Nuclear reactors",
+        },
+        {
+          number: 41,
+          symbol: "Nb",
+          name: "Niobium",
+          mass: "92.906",
+          category: "metal",
+          period: 5,
+          group: 5,
+          property: "Superconductive",
+          use: "Steel alloys",
+        },
+        {
+          number: 42,
+          symbol: "Mo",
+          name: "Molybdenum",
+          mass: "95.95",
+          category: "metal",
+          period: 5,
+          group: 6,
+          property: "High melting point",
+          use: "Steel strengthening",
+        },
+        {
+          number: 43,
+          symbol: "Tc",
+          name: "Technetium",
+          mass: "(98)",
+          category: "metal",
+          period: 5,
+          group: 7,
+          property: "Radioactive",
+          use: "Medical imaging",
+        },
+        {
+          number: 44,
+          symbol: "Ru",
+          name: "Ruthenium",
+          mass: "101.07",
+          category: "metal",
+          period: 5,
+          group: 8,
+          property: "Hard, corrosion resistant",
+          use: "Electrical contacts",
+        },
+        {
+          number: 45,
+          symbol: "Rh",
+          name: "Rhodium",
+          mass: "102.91",
+          category: "metal",
+          period: 5,
+          group: 9,
+          property: "Reflective and corrosion resistant",
+          use: "Catalytic converters",
+        },
+        {
+          number: 46,
+          symbol: "Pd",
+          name: "Palladium",
+          mass: "106.42",
+          category: "metal",
+          period: 5,
+          group: 10,
+          property: "Catalyst",
+          use: "Catalytic converters",
+        },
+        {
+          number: 47,
+          symbol: "Ag",
+          name: "Silver",
+          mass: "107.87",
+          category: "metal",
+          period: 5,
+          group: 11,
+          property: "Best electrical conductor",
+          use: "Jewelry and electronics",
+        },
+        {
+          number: 48,
+          symbol: "Cd",
+          name: "Cadmium",
+          mass: "112.41",
+          category: "metal",
+          period: 5,
+          group: 12,
+          property: "Toxic heavy metal",
+          use: "Batteries and coatings",
+        },
+        {
+          number: 49,
+          symbol: "In",
+          name: "Indium",
+          mass: "114.82",
+          category: "metal",
+          period: 5,
+          group: 13,
+          property: "Soft metal",
+          use: "Touchscreens",
+        },
+        {
+          number: 50,
+          symbol: "Sn",
+          name: "Tin",
+          mass: "118.71",
+          category: "metal",
+          period: 5,
+          group: 14,
+          property: "Corrosion resistant",
+          use: "Coatings and alloys",
+        },
+        {
+          number: 51,
+          symbol: "Sb",
+          name: "Antimony",
+          mass: "121.76",
+          category: "metalloid",
+          period: 5,
+          group: 15,
+          property: "Brittle metalloid",
+          use: "Flame retardants",
+        },
+        {
+          number: 52,
+          symbol: "Te",
+          name: "Tellurium",
+          mass: "127.60",
+          category: "metalloid",
+          period: 5,
+          group: 16,
+          property: "Rare metalloid",
+          use: "Alloys and solar cells",
+        },
+        {
+          number: 53,
+          symbol: "I",
+          name: "Iodine",
+          mass: "126.90",
+          category: "nonmetal",
+          period: 5,
+          group: 17,
+          property: "Essential halogen",
+          use: "Disinfectants",
+        },
+        {
+          number: 54,
+          symbol: "Xe",
+          name: "Xenon",
+          mass: "131.29",
+          category: "nonmetal",
+          period: 5,
+          group: 18,
+          property: "Noble gas",
+          use: "Lighting and anesthesia",
+        },
+
+        {
+          number: 55,
+          symbol: "Cs",
+          name: "Cesium",
+          mass: "132.91",
+          category: "metal",
+          period: 6,
+          group: 1,
+          property: "Very reactive alkali metal",
+          use: "Atomic clocks",
+        },
+        {
+          number: 56,
+          symbol: "Ba",
+          name: "Barium",
+          mass: "137.33",
+          category: "metal",
+          period: 6,
+          group: 2,
+          property: "Reactive alkaline earth metal",
+          use: "X-ray contrast agents",
+        },
+        // Lanthanides example:
+        {
+          number: 57,
+          symbol: "La",
+          name: "Lanthanum",
+          mass: "138.91",
+          category: "metal",
+          period: 6,
+          group: 3,
+          property: "Soft, malleable metal",
+          use: "Camera lenses",
+        },
+        {
+          number: 58,
+          symbol: "Ce",
+          name: "Cerium",
+          mass: "140.12",
+          category: "metal",
+          period: 8,
+          group: 4,
+          property: "Used in catalysts",
+          use: "Catalytic converters",
+        },
+        {
+          number: 59,
+          symbol: "Pr",
+          name: "Praseodymium",
+          mass: "140.91",
+          category: "metal",
+          period: 8,
+          group: 5,
+          property: "Used in magnets",
+          use: "Magnets",
+        },
+        {
+          number: 60,
+          symbol: "Nd",
+          name: "Neodymium",
+          mass: "144.24",
+          category: "metal",
+          period: 8,
+          group: 6,
+          property: "Strong magnets",
+          use: "Magnets in electronics",
+        },
+        {
+          number: 61,
+          symbol: "Pm",
+          name: "Promethium",
+          mass: "(145)",
+          category: "metal",
+          period: 8,
+          group: 7,
+          property: "Radioactive",
+          use: "Nuclear batteries",
+        },
+        {
+          number: 62,
+          symbol: "Sm",
+          name: "Samarium",
+          mass: "150.36",
+          category: "metal",
+          period: 8,
+          group: 8,
+          property: "Magnetic properties",
+          use: "Magnets",
+        },
+        {
+          number: 63,
+          symbol: "Eu",
+          name: "Europium",
+          mass: "151.96",
+          category: "metal",
+          period: 8,
+          group: 9,
+          property: "Phosphor",
+          use: "TV screens",
+        },
+        {
+          number: 64,
+          symbol: "Gd",
+          name: "Gadolinium",
+          mass: "157.25",
+          category: "metal",
+          period: 8,
+          group: 10,
+          property: "Magnetic",
+          use: "MRI contrast agents",
+        },
+        {
+          number: 65,
+          symbol: "Tb",
+          name: "Terbium",
+          mass: "158.93",
+          category: "metal",
+          period: 8,
+          group: 11,
+          property: "Phosphor",
+          use: "Green phosphors",
+        },
+        {
+          number: 66,
+          symbol: "Dy",
+          name: "Dysprosium",
+          mass: "162.50",
+          category: "metal",
+          period: 8,
+          group: 12,
+          property: "Magnetic",
+          use: "Magnets",
+        },
+        {
+          number: 67,
+          symbol: "Ho",
+          name: "Holmium",
+          mass: "164.93",
+          category: "metal",
+          period: 8,
+          group: 13,
+          property: "Strong magnetic",
+          use: "Lasers",
+        },
+        {
+          number: 68,
+          symbol: "Er",
+          name: "Erbium",
+          mass: "167.26",
+          category: "metal",
+          period: 8,
+          group: 14,
+          property: "Used in lasers",
+          use: "Fiber optics",
+        },
+        {
+          number: 69,
+          symbol: "Tm",
+          name: "Thulium",
+          mass: "168.93",
+          category: "metal",
+          period: 8,
+          group: 15,
+          property: "Radioactive",
+          use: "X-ray lasers",
+        },
+        {
+          number: 70,
+          symbol: "Yb",
+          name: "Ytterbium",
+          mass: "173.05",
+          category: "metal",
+          period: 8,
+          group: 16,
+          property: "Soft metal",
+          use: "Electronics",
+        },
+        {
+          number: 71,
+          symbol: "Lu",
+          name: "Lutetium",
+          mass: "174.97",
+          category: "metal",
+          period: 8,
+          group: 17,
+          property: "Dense metal",
+          use: "Catalysts",
+        },
+
+        {
+          number: 72,
+          symbol: "Hf",
+          name: "Hafnium",
+          mass: "178.49",
+          category: "metal",
+          period: 6,
+          group: 4,
+          property: "Corrosion resistant",
+          use: "Nuclear reactors",
+        },
+        {
+          number: 73,
+          symbol: "Ta",
+          name: "Tantalum",
+          mass: "180.95",
+          category: "metal",
+          period: 6,
+          group: 5,
+          property: "Corrosion resistant",
+          use: "Electronics",
+        },
+        {
+          number: 74,
+          symbol: "W",
+          name: "Tungsten",
+          mass: "183.84",
+          category: "metal",
+          period: 6,
+          group: 6,
+          property: "Highest melting point",
+          use: "Light bulb filaments",
+        },
+        {
+          number: 75,
+          symbol: "Re",
+          name: "Rhenium",
+          mass: "186.21",
+          category: "metal",
+          period: 6,
+          group: 7,
+          property: "High melting point",
+          use: "Jet engines",
+        },
+        {
+          number: 76,
+          symbol: "Os",
+          name: "Osmium",
+          mass: "190.23",
+          category: "metal",
+          period: 6,
+          group: 8,
+          property: "Densest metal",
+          use: "Pen tips",
+        },
+        {
+          number: 77,
+          symbol: "Ir",
+          name: "Iridium",
+          mass: "192.22",
+          category: "metal",
+          period: 6,
+          group: 9,
+          property: "Highly corrosion resistant",
+          use: "Spark plugs",
+        },
+        {
+          number: 78,
+          symbol: "Pt",
+          name: "Platinum",
+          mass: "195.08",
+          category: "metal",
+          period: 6,
+          group: 10,
+          property: "Catalyst and jewelry",
+          use: "Catalytic converters",
+        },
+        {
+          number: 79,
+          symbol: "Au",
+          name: "Gold",
+          mass: "196.97",
+          category: "metal",
+          period: 6,
+          group: 11,
+          property: "Highly conductive and nonreactive",
+          use: "Jewelry and electronics",
+        },
+        {
+          number: 80,
+          symbol: "Hg",
+          name: "Mercury",
+          mass: "200.59",
+          category: "metal",
+          period: 6,
+          group: 12,
+          property: "Liquid metal at room temp",
+          use: "Thermometers",
+        },
+        {
+          number: 81,
+          symbol: "Tl",
+          name: "Thallium",
+          mass: "204.38",
+          category: "metal",
+          period: 6,
+          group: 13,
+          property: "Toxic heavy metal",
+          use: "Electronics",
+        },
+        {
+          number: 82,
+          symbol: "Pb",
+          name: "Lead",
+          mass: "207.2",
+          category: "metal",
+          period: 6,
+          group: 14,
+          property: "Dense, toxic metal",
+          use: "Batteries and shielding",
+        },
+        {
+          number: 83,
+          symbol: "Bi",
+          name: "Bismuth",
+          mass: "208.98",
+          category: "metal",
+          period: 6,
+          group: 15,
+          property: "Low toxicity metal",
+          use: "Cosmetics and medicines",
+        },
+        {
+          number: 84,
+          symbol: "Po",
+          name: "Polonium",
+          mass: "(209)",
+          category: "metal",
+          period: 6,
+          group: 16,
+          property: "Radioactive",
+          use: "Research",
+        },
+        {
+          number: 85,
+          symbol: "At",
+          name: "Astatine",
+          mass: "(210)",
+          category: "metalloid",
+          period: 6,
+          group: 17,
+          property: "Rare radioactive halogen",
+          use: "Research",
+        },
+        {
+          number: 86,
+          symbol: "Rn",
+          name: "Radon",
+          mass: "(222)",
+          category: "nonmetal",
+          period: 6,
+          group: 18,
+          property: "Radioactive noble gas",
+          use: "Cancer therapy",
+        },
+
+        {
+          number: 87,
+          symbol: "Fr",
+          name: "Francium",
+          mass: "(223)",
+          category: "metal",
+          period: 7,
+          group: 1,
+          property: "Extremely radioactive",
+          use: "Research",
+        },
+        {
+          number: 88,
+          symbol: "Ra",
+          name: "Radium",
+          mass: "(226)",
+          category: "metal",
+          period: 7,
+          group: 2,
+          property: "Radioactive alkaline earth",
+          use: "Cancer treatment (historical)",
+        },
+        // Actinides example:
+        {
+          number: 89,
+          symbol: "Ac",
+          name: "Actinium",
+          mass: "227",
+          category: "metal",
+          period: 7,
+          group: 3,
+          property: "Radioactive metal",
+          use: "Radiotherapy",
+        },
+        {
+          number: 90,
+          symbol: "Th",
+          name: "Thorium",
+          mass: "232.04",
+          category: "metal",
+          period: 9,
+          group: 4,
+          property: "Radioactive nuclear fuel",
+          use: "Nuclear reactors",
+        },
+        {
+          number: 91,
+          symbol: "Pa",
+          name: "Protactinium",
+          mass: "(231)",
+          category: "metal",
+          period: 9,
+          group: 5,
+          property: "Radioactive",
+          use: "Research",
+        },
+        {
+          number: 92,
+          symbol: "U",
+          name: "Uranium",
+          mass: "238.03",
+          category: "metal",
+          period: 9,
+          group: 6,
+          property: "Radioactive nuclear fuel",
+          use: "Nuclear reactors and weapons",
+        },
+        {
+          number: 93,
+          symbol: "Np",
+          name: "Neptunium",
+          mass: "(237)",
+          category: "metal",
+          period: 9,
+          group: 7,
+          property: "Radioactive",
+          use: "Research",
+        },
+        {
+          number: 94,
+          symbol: "Pu",
+          name: "Plutonium",
+          mass: "(244)",
+          category: "metal",
+          period: 9,
+          group: 8,
+          property: "Radioactive",
+          use: "Nuclear weapons",
+        },
+        {
+          number: 95,
+          symbol: "Am",
+          name: "Americium",
+          mass: "(243)",
+          category: "metal",
+          period: 9,
+          group: 9,
+          property: "Radioactive",
+          use: "Smoke detectors",
+        },
+        {
+          number: 96,
+          symbol: "Cm",
+          name: "Curium",
+          mass: "(247)",
+          category: "metal",
+          period: 9,
+          group: 10,
+          property: "Radioactive",
+          use: "Research",
+        },
+        {
+          number: 97,
+          symbol: "Bk",
+          name: "Berkelium",
+          mass: "(247)",
+          category: "metal",
+          period: 9,
+          group: 11,
+          property: "Radioactive",
+          use: "Research",
+        },
+        {
+          number: 98,
+          symbol: "Cf",
+          name: "Californium",
+          mass: "(251)",
+          category: "metal",
+          period: 9,
+          group: 12,
+          property: "Radioactive",
+          use: "Neutron source",
+        },
+        {
+          number: 99,
+          symbol: "Es",
+          name: "Einsteinium",
+          mass: "(252)",
+          category: "metal",
+          period: 9,
+          group: 13,
+          property: "Radioactive",
+          use: "Research",
+        },
+        {
+          number: 100,
+          symbol: "Fm",
+          name: "Fermium",
+          mass: "(257)",
+          category: "metal",
+          period: 9,
+          group: 14,
+          property: "Radioactive",
+          use: "Research",
+        },
+        {
+          number: 101,
+          symbol: "Md",
+          name: "Mendelevium",
+          mass: "(258)",
+          category: "metal",
+          period: 9,
+          group: 15,
+          property: "Radioactive",
+          use: "Research",
+        },
+        {
+          number: 102,
+          symbol: "No",
+          name: "Nobelium",
+          mass: "(259)",
+          category: "metal",
+          period: 9,
+          group: 16,
+          property: "Radioactive",
+          use: "Research",
+        },
+        {
+          number: 103,
+          symbol: "Lr",
+          name: "Lawrencium",
+          mass: "(262)",
+          category: "metal",
+          period: 9,
+          group: 17,
+          property: "Radioactive",
+          use: "Research",
+        },
+
+        {
+          number: 104,
+          symbol: "Rf",
+          name: "Rutherfordium",
+          mass: "(267)",
+          category: "metal",
+          period: 7,
+          group: 4,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 105,
+          symbol: "Db",
+          name: "Dubnium",
+          mass: "(270)",
+          category: "metal",
+          period: 7,
+          group: 5,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 106,
+          symbol: "Sg",
+          name: "Seaborgium",
+          mass: "(271)",
+          category: "metal",
+          period: 7,
+          group: 6,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 107,
+          symbol: "Bh",
+          name: "Bohrium",
+          mass: "(270)",
+          category: "metal",
+          period: 7,
+          group: 7,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 108,
+          symbol: "Hs",
+          name: "Hassium",
+          mass: "(277)",
+          category: "metal",
+          period: 7,
+          group: 8,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 109,
+          symbol: "Mt",
+          name: "Meitnerium",
+          mass: "(276)",
+          category: "metal",
+          period: 7,
+          group: 9,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 110,
+          symbol: "Ds",
+          name: "Darmstadtium",
+          mass: "(281)",
+          category: "metal",
+          period: 7,
+          group: 10,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 111,
+          symbol: "Rg",
+          name: "Roentgenium",
+          mass: "(282)",
+          category: "metal",
+          period: 7,
+          group: 11,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 112,
+          symbol: "Cn",
+          name: "Copernicium",
+          mass: "(285)",
+          category: "metal",
+          period: 7,
+          group: 12,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 113,
+          symbol: "Nh",
+          name: "Nihonium",
+          mass: "(286)",
+          category: "metal",
+          period: 7,
+          group: 13,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 114,
+          symbol: "Fl",
+          name: "Flerovium",
+          mass: "(289)",
+          category: "metal",
+          period: 7,
+          group: 14,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 115,
+          symbol: "Mc",
+          name: "Moscovium",
+          mass: "(288)",
+          category: "metal",
+          period: 7,
+          group: 15,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 116,
+          symbol: "Lv",
+          name: "Livermorium",
+          mass: "(293)",
+          category: "metal",
+          period: 7,
+          group: 16,
+          property: "Synthetic element",
+          use: "Research",
+        },
+        {
+          number: 117,
+          symbol: "Ts",
+          name: "Tennessine",
+          mass: "(294)",
+          category: "metalloid",
+          period: 7,
+          group: 17,
+          property: "Synthetic halogen",
+          use: "Research",
+        },
+        // Last element example:
+        {
+          number: 118,
+          symbol: "Og",
+          name: "Oganesson",
+          mass: "294",
+          category: "nonmetal",
+          period: 7,
+          group: 18,
+          property: "Synthetic, very unstable",
+          use: "Research only",
+        },
+      ];
+
+      // Map of category to CSS class for color coding
+      const categoryClass = {
+        metal: "metal",
+        metalloid: "metalloid",
+        nonmetal: "nonmetal",
+      };
+
+      const table = document.getElementById("periodic-table");
+
+      // For layout, some elements are placed manually for f-block
+      // We'll use grid-row and grid-column CSS styles for placement
+
+      elements.forEach((el) => {
+        const div = document.createElement("div");
+        div.classList.add("element");
+        div.classList.add(categoryClass[el.category] || "nonmetal");
+
+        // Set grid position
+        // For Lanthanides (period 6, group 3-17), place in row 8
+        // For Actinides (period 7, group 3-17), place in row 9
+        let row = el.period;
+        if (el.period === 6 && el.group >= 4 && el.group <= 17) row = 8; // lanthanides row
+        if (el.period === 7 && el.group >= 4 && el.group <= 17) row = 9; // actinides row
+
+        div.style.gridRow = row;
+        div.style.gridColumn = el.group;
+
+        // Add content
+        div.innerHTML = `
+        <div class="number">${el.number}</div>
+        <div class="symbol" title="${el.name}">${el.symbol}</div>
+        <div class="mass">${el.mass}</div>
+        <div class="tooltip">
+          <strong>Property:</strong> ${el.property}<br>
+          <strong>Use:</strong> ${el.use}
+        </div>
+      `;
+
+        table.appendChild(div);
+      });
+    </script>
+  </body>
+</html>
